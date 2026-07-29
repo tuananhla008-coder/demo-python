@@ -34,17 +34,19 @@ m = max([7, 21, 20, 5])
 print(m)
 #E hàm lồng nhau, hàm bao quanh
 def outer():
-     #x = 'outer x' #nếu vô hiệu hóa dòng này và khôi phục chạy dòng bên tròn sẽ báo lỗi
+     x = 'outer x' #nếu vô hiệu hóa dòng này và khôi phục chạy dòng bên tròn sẽ báo lỗi
 
      def inner():
         #nonlocal x 
         '''khai báo biên toàn cục trong hàm nhưng không được viết global 
         mà viết nonlocal'''
-        #x = 'inner x' 
+        x = 'inner x' 
         '''#nếu vô hiệu hóa dòng này thì biến vẫn sẽ in ra outer x 2 lần 
         đó chính là sự đặc biệt của phạm vi bao trùm
         '''
         print(x)
      inner()
      print(x)
-outer()          
+outer() 
+'''LƯU Ý: nếu khi các giá trị bên trong hàm bị vô hiệu hóa thì khi in ra giá trị
+      sẽ in ra giá trị của biến toàn cục  '''
