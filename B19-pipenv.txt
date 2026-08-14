@@ -1,0 +1,299 @@
+# TỔNG KẾT PIPENV — Dựa trên video Corey Schafer + thực hành thực tế trên Windows
+
+> Tài liệu này tổng hợp lại toàn bộ kiến thức và lệnh đã học/thực hành, dùng để tra cứu lại khi cần, không cần xem lại video từ đầu.
+
+---
+
+## 1. PIPENV LÀ GÌ, GIẢI QUYẾT VẤN ĐỀ GÌ
+
+Pipenv gộp 2 công cụ làm 1: **pip** (cài thư viện) + **virtualenv** (tạo môi trường ảo riêng cho từng dự án).
+
+Nó giải quyết 2 vấn đề:
+- **Xung đột phiên bản thư viện** giữa các dự án khác nhau trên cùng 1 máy (mỗi dự án có "hộp cách ly" riêng)
+- **Tái lập chính xác môi trường** khi người khác (hoặc chính bạn ở máy khác) clone dự án về — đảm bảo cài đúng y hệt phiên bản thư viện
+
+---
+
+## 2. CÀI ĐẶT PIPENV
+
+```powershell
+pip install Pipenv
+```
+
+Sau khi cài, nếu terminal báo lỗi `'pipenv' is not recognized...`, nghĩa là thư mục chứa `pipenv.exe` chưa nằm trong PATH của Windows.
+
+**Cách chạy tạm thời không cần sửa PATH:**
+```powershell
+python -m pipenv --version
+```
+
+**Cách sửa PATH vĩnh viễn (khuyến nghị):**
+1. Windows → gõ "Environment Variables" → "Edit the system environment variables"
+2. "Environment Variables..." → chọn `Path` (User variables) → "Edit..." → "New"
+3. Dán đúng đường dẫn báo trong warning lúc cài, dạng:
+   `C:\Users\<tên>\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\Scripts`
+4. OK hết các cửa sổ → **đóng hẳn VS Code, mở lại** (PATH chỉ nạp lại khi mở terminal/app mới)
+5. Kiểm tra: `pipenv --version`
+
+---
+
+## 3. LƯU Ý QUAN TRỌNG VỀ THƯ MỤC LÀM VIỆC (Windows + OneDrive)
+
+Môi trường ảo tạo ra rất nhiều file nhỏ. Nếu thư mục dự án nằm trong OneDrive (VD `C:\Users\...\OneDrive\Documents\...`), dễ gặp lỗi khóa file do OneDrive cố đồng bộ liên tục.
+
+**Khuyến nghị:** làm việc trong thư mục ngoài OneDrive, ví dụ `C:\pytest_playground\...`
+
+---
+
+## 4. TẠO MÔI TRƯỜNG ẢO + CÀI GÓI ĐẦU TIÊN
+
+```powershell
+pipenv install requests
+```
+
+Lệnh này tự động:
+1. Tạo virtualenv mới cho thư mục hiện tại (nếu chưa có)
+2. Tạo file `Pipfile` (nếu chưa có)
+3. Cài `requests` + các gói phụ thuộc của nó (`idna`, `certifi`, `chardet`...)
+4. Tạo/cập nhật `Pipfile.lock` khóa chính xác phiên bản
+
+**Trên Windows**, virtualenv được lưu tại:
+```
+C:\Users\<tên>\.virtualenvs\<tên_thư_mục_dự_án>-<mã_ngẫu_nhiên>
+```
+(Tương đương bên Mac: `/Users/<tên>/.local/share/virtualenvs/...`)
+
+---
+
+## 5. CẤU TRÚC FILE `Pipfile` (con người đọc/sửa được)
+
+```toml
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+requests = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.13"
+```
+
+- `[[source]]` → nơi tải thư viện về (mặc định PyPI)
+- `[packages]` → thư viện cần khi **chạy dự án thật**
+- `[dev-packages]` → thư viện chỉ cần lúc **phát triển/test** (không cần khi deploy)
+- `[requires]` → phiên bản Python dự án yêu cầu
+
+**`Pipfile.lock`** → file máy đọc, khóa chính xác version của mọi thư viện (kể cả thư viện phụ). Không bao giờ tự sửa tay file này.
+
+**Mở/xem file:**
+```powershell
+type Pipfile          # xem nhanh trong terminal
+code Pipfile           # mở bằng VS Code
+```
+
+---
+
+## 6. VÀO / RA MÔI TRƯỜNG ẢO
+
+```powershell
+pipenv shell        # vào môi trường ảo (subshell mới)
+exit                 # thoát môi trường ảo, quay lại terminal gốc
+```
+
+**Chạy 1 lệnh đơn lẻ mà không cần vào hẳn shell:**
+```powershell
+pipenv run python
+pipenv run python app.py
+```
+
+**Kiểm tra đang dùng đúng Python của virtualenv:**
+```powershell
+where python          # gõ ở terminal thường, LIỆT KÊ mọi python.exe tìm thấy, dòng đầu là ưu tiên
+```
+Hoặc bên trong Python:
+```python
+import sys
+sys.executable         # in ra đường dẫn python.exe đang chạy
+```
+
+> Lưu ý: `where python` là lệnh của terminal Windows — chỉ gõ ở dấu nhắc `PS C:\...>`, KHÔNG gõ ở dấu `>>>` (đang trong Python) vì sẽ báo `SyntaxError`.
+
+**Kiểm tra đường dẫn virtualenv của dự án hiện tại:**
+```powershell
+pipenv --venv
+```
+
+---
+
+## 7. CÀI TỪ FILE `requirements.txt` CÓ SẴN
+
+```powershell
+pipenv install -r requirements.txt
+```
+
+- Dấu `-r` = "read from requirements file"
+- Đường dẫn phải đúng: nếu file nằm cùng thư mục đang đứng → chỉ ghi `requirements.txt`; nếu ở thư mục cha → `../requirements.txt`
+
+**Lỗi thường gặp — thư viện cũ không tương thích Python mới:**
+Nếu `requirements.txt` ghi cứng version quá cũ (VD `Pillow==5.2.0` từ 2018) trong khi máy dùng Python bản rất mới (VD 3.13), có thể lỗi `Failed to build 'pillow' when getting requirements to build wheel` vì không có bản dựng sẵn (`.whl`) tương thích.
+
+**Cách sửa:** bỏ số phiên bản cụ thể trong `requirements.txt`, để pip tự chọn bản mới nhất tương thích:
+```
+Django
+django-crispy-forms
+Pillow
+pytz
+```
+
+---
+
+## 8. XEM CÂY PHỤ THUỘC ĐÃ CÀI
+
+```powershell
+pipenv graph
+```
+In ra danh sách toàn bộ thư viện đã cài, kèm các thư viện phụ mà mỗi thư viện chính kéo theo.
+
+---
+
+## 9. XUẤT LẠI THÀNH `requirements.txt` (cho người không dùng Pipenv)
+
+Cú pháp cũ trong video (`pipenv lock -r`) đã bị thay bằng cú pháp mới ở bản Pipenv hiện tại:
+```powershell
+pipenv requirements
+```
+Lưu ra file:
+```powershell
+pipenv requirements > requirements.txt
+```
+
+---
+
+## 10. CÀI GÓI CHỈ DÙNG LÚC PHÁT TRIỂN (`--dev`)
+
+```powershell
+pipenv install pytest --dev
+```
+Ghi vào `[dev-packages]` trong `Pipfile` thay vì `[packages]`. Khi deploy lên production, các gói dev không bắt buộc phải cài, giúp môi trường thật gọn nhẹ hơn.
+
+---
+
+## 11. CHỈ ĐỊNH PHIÊN BẢN PYTHON CỤ THỂ CHO VIRTUALENV
+
+```powershell
+pipenv --python 3.13
+```
+Nếu virtualenv cũ đã tồn tại với version khác, Pipenv sẽ xoá và tạo lại bằng đúng version chỉ định. Yêu cầu: bản Python đó phải đã được cài sẵn trên máy — Pipenv không tự tải Python về.
+
+**Kiểm tra các bản Python có trên máy (Windows, nếu không có `py launcher`):**
+```powershell
+python --version        # chỉ ra bản đang mặc định
+where python             # liệt kê các đường dẫn python.exe có trong PATH
+```
+
+---
+
+## 12. QUÉT LỖ HỔNG BẢO MẬT THƯ VIỆN
+
+Trong video Corey dùng `pipenv check`, nhưng lệnh này **đã lỗi thời** (dựa trên dịch vụ Safety, nay yêu cầu đăng ký API key tại pyup.io mới quét đầy đủ).
+
+**Nên dùng thay thế, không cần đăng ký gì:**
+```powershell
+pipenv audit
+```
+Lần đầu chạy sẽ hỏi cài thêm công cụ `pip-audit` (gõ `y` để đồng ý) — không ảnh hưởng gì tới `Pipfile`/`Pipfile.lock` của dự án. Dùng nguồn dữ liệu công khai (Python Packaging Advisory Database), báo lỗ hổng bảo mật đã biết trong các thư viện đang cài.
+
+---
+
+## 13. PUSH TO PRODUCTION — CHUẨN BỊ ĐƯA DỰ ÁN LÊN SERVER THẬT
+
+Đây là bước cuối trong video Corey, mục đích: đảm bảo server thật cài **chính xác tuyệt đối** đúng thư viện đã kiểm thử trên máy dev, không để Pipenv tự ý chọn version khác.
+
+**Bước 1 — Khóa lại `Pipfile.lock` sau khi sửa `Pipfile`**
+```powershell
+pipenv lock
+```
+Chỉ cập nhật `Pipfile.lock` dựa theo `Pipfile` hiện tại, **không cài** gì thêm. Dùng sau khi tự sửa tay `Pipfile` (đổi version, thêm dòng mới...) mà chưa chạy `pipenv install`.
+
+**Bước 2 — Cài đặt trên server, chỉ dựa vào `Pipfile.lock`**
+```powershell
+pipenv install --ignore-pipfile
+```
+**Bỏ qua hoàn toàn** `Pipfile` (kể cả các ràng buộc lỏng như `requests = "*"`), chỉ cài đúng y hệt phiên bản đã "đóng băng" trong `Pipfile.lock`. Đây là lệnh nên dùng khi deploy, không dùng `pipenv install` thường trên server.
+
+| Lệnh | Đọc từ | Dùng khi |
+|---|---|---|
+| `pipenv install` (bình thường) | `Pipfile` (rồi cập nhật `Pipfile.lock`) | Đang phát triển, có thể thêm/gỡ gói |
+| `pipenv lock` | `Pipfile` → sinh `Pipfile.lock` mới | Chỉ muốn khóa lại version, không cài gì thêm |
+| `pipenv install --ignore-pipfile` | **Chỉ** `Pipfile.lock` | Deploy lên production — cần tái lập chính xác 100% |
+
+**Trước khi deploy, nên chạy quét bảo mật** (xem mục 12): `pipenv audit` — đảm bảo không đưa lên server thư viện có lỗ hổng đã biết.
+
+**Biến môi trường bí mật — file `.env`**
+Khi chạy `pipenv shell` hoặc `pipenv run`, Pipenv **tự động đọc file `.env`** (nếu có trong thư mục dự án) và nạp các biến vào môi trường. Dùng để giấu thông tin nhạy cảm (mật khẩu, API key, `SECRET_KEY`...) mà không đưa lên GitHub.
+
+Ví dụ nội dung `.env`:
+```
+SECRET_KEY=MySuperSecretKey
+```
+Đọc lại trong Python:
+```python
+import os
+os.environ['SECRET_KEY']
+```
+Lưu ý: tên file bắt đầu bằng dấu chấm, không có phần tên trước đó (`.env`, không phải `env.txt`). Trên Windows, tạo bằng terminal cho chắc:
+```powershell
+echo SECRET_KEY=MySuperSecretKey > .env
+```
+Sau khi tạo/sửa `.env`, cần **thoát và vào lại `pipenv shell`** để Pipenv nạp lại giá trị mới. File `.env` **không nên đưa lên GitHub** (thêm vào `.gitignore`) vì chứa thông tin nhạy cảm.
+
+---
+
+## 14. XOÁ / TẠO LẠI MÔI TRƯỜNG ẢO
+
+```powershell
+pipenv --rm             # (cú pháp cũ, sẽ bị loại bỏ dần)
+pipenv remove            # cú pháp mới nên dùng thay --rm
+```
+Sau khi xoá, chạy lại để tạo mới dựa trên `Pipfile`/`Pipfile.lock` hiện có:
+```powershell
+pipenv install
+```
+
+---
+
+## 15. BẢNG TRA NHANH CÁC LỆNH THƯỜNG DÙNG
+
+| Việc cần làm | Lệnh |
+|---|---|
+| Cài Pipenv | `pip install Pipenv` |
+| Cài 1 thư viện mới | `pipenv install <tên_gói>` |
+| Cài thư viện chỉ dùng lúc dev | `pipenv install <tên_gói> --dev` |
+| Cài lại toàn bộ từ Pipfile.lock có sẵn | `pipenv install` |
+| Cài từ file requirements.txt | `pipenv install -r requirements.txt` |
+| Gỡ 1 thư viện | `pipenv uninstall <tên_gói>` |
+| Vào môi trường ảo | `pipenv shell` |
+| Thoát môi trường ảo | `exit` |
+| Chạy 1 lệnh trong môi trường ảo | `pipenv run <lệnh>` |
+| Xem đường dẫn virtualenv | `pipenv --venv` |
+| Xem cây phụ thuộc | `pipenv graph` |
+| Xuất ra requirements.txt | `pipenv requirements` |
+| Chỉ định Python version | `pipenv --python <version>` |
+| Xoá virtualenv | `pipenv remove` |
+| Quét lỗ hổng bảo mật | `pipenv audit` (thay cho `pipenv check` đã lỗi thời) |
+| Khóa lại Pipfile.lock (không cài thêm) | `pipenv lock` |
+| Cài đúng y hệt Pipfile.lock (dùng khi deploy) | `pipenv install --ignore-pipfile` |
+| Kiểm tra Python đang chạy từ đâu | `where python` (terminal) hoặc `sys.executable` (trong Python) |
+
+---
+
+## 16. GHI CHÚ RIÊNG CHO MÔI TRƯỜNG CỦA BẠN
+
+- Máy: Windows 11, Python 3.13 cài qua Microsoft Store, không có `py launcher` (lệnh `py` không dùng được, dùng `python` trực tiếp)
+- Tránh làm việc Pipenv trong thư mục OneDrive — ưu tiên `C:\pytest_playground\...`
+- Sau khi sửa PATH, luôn phải **mở lại VS Code hoàn toàn** thì mới nhận thay đổi
+- Cú pháp trong video của Corey (2018) đôi khi đã lỗi thời so với bản Pipenv hiện tại (`2026.7.1`) — ví dụ `pipenv lock -r` → nay là `pipenv requirements`; `pipenv --rm` → nay khuyến nghị `pipenv remove`. Gặp lệnh báo "unrecognized arguments", đây là nguyên nhân phổ biến nhất, không phải do làm sai thao tác.
