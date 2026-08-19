@@ -1,0 +1,91 @@
+## SO SÁNH `venv` VÀ `Pipenv`
+
+### 1. Bản chất
+
+| | `venv` | `Pipenv` |
+|---|---|---|
+| Là gì | Module có sẵn trong Python (từ 3.3+), không cần cài thêm | Công cụ bên thứ 3, cần `pip install Pipenv` |
+| Chức năng | Chỉ tạo môi trường ảo | Gộp tạo môi trường ảo + quản lý thư viện (thay `pip`) |
+
+### 2. Tạo môi trường ảo
+
+**`venv`:**
+```powershell
+python -m venv project_env
+```
+Tạo thư mục `project_env` NGAY TRONG thư mục dự án.
+
+**`Pipenv`:**
+```powershell
+pipenv install
+```
+Tự động tạo, lưu ở nơi riêng NGOÀI thư mục dự án (`C:\Users\<tên>\.virtualenvs\...`).
+
+### 3. Kích hoạt môi trường ảo
+
+**`venv`** (khác nhau theo loại terminal):
+```powershell
+# Command Prompt (cmd.exe)
+project_env\Scripts\activate.bat
+
+# PowerShell
+.\project_env\Scripts\Activate.ps1
+```
+
+**`Pipenv`** (giống nhau mọi loại terminal):
+```powershell
+pipenv shell
+```
+
+### 4. Quản lý thư viện
+
+**`venv`** — không tự quản lý, vẫn dùng `pip` thủ công:
+```powershell
+pip install requests
+pip freeze > requirements.txt   # phải tự tay xuất file
+```
+
+**`Pipenv`** — tự động, tích hợp sẵn:
+```powershell
+pipenv install requests
+```
+Tự động cài + ghi vào `Pipfile` + cập nhật `Pipfile.lock` cùng lúc.
+
+### 5. File quản lý thư viện
+
+| | `venv` + `pip` | `Pipenv` |
+|---|---|---|
+| File ghi thư viện | `requirements.txt` (tự tạo bằng `pip freeze`) | `Pipfile` (tự động) |
+| Khóa version chính xác | Không có cơ chế riêng | `Pipfile.lock` khóa mọi thư viện, kể cả phụ thuộc gián tiếp |
+| Phân biệt gói dev/thật | Không có sẵn | Có `[packages]` và `[dev-packages]` |
+
+### 6. Vị trí lưu môi trường ảo
+
+| | Vị trí |
+|---|---|
+| `venv` | TRONG thư mục dự án — dễ vô tình đưa lên GitHub nếu quên `.gitignore` |
+| `Pipenv` | NGOÀI thư mục dự án hoàn toàn — không có nguy cơ đưa nhầm lên Git |
+
+### 7. Khi nào dùng cái nào
+
+| Tình huống | Nên dùng |
+|---|---|
+| Học nền tảng, hiểu cơ chế gốc | `venv` |
+| Làm dự án cá nhân, muốn tiện, tự động | `Pipenv` |
+| Gặp dự án cũ chỉ có `requirements.txt` | Bắt buộc biết `venv` + `pip` |
+| Dự án hiện đại, ưu tiên gọn gàng | `Pipenv` |
+
+### Ghi nhớ cốt lõi
+
+> `Pipenv` được XÂY DỰNG DỰA TRÊN `venv` — khi chạy `pipenv install`,
+> Pipenv âm thầm gọi `venv` phía sau để tạo môi trường ảo, chỉ là
+> tự động hóa và gói gọn thêm nhiều bước quản lý thư viện.
+
+### Lưu ý quan trọng riêng cho Windows + PowerShell
+
+`activate.bat` chỉ dùng được trong Command Prompt (`cmd.exe`).
+Nếu đang dùng PowerShell (terminal mặc định trong VS Code trên
+Windows), PHẢI dùng `Activate.ps1` thay vì `activate.bat`, nếu không
+môi trường ảo sẽ KHÔNG được kích hoạt thật sự (chạy .bat từ PowerShell
+mở 1 tiến trình cmd.exe con, thay đổi biến môi trường không được giữ
+lại sau khi tiến trình con đó đóng).

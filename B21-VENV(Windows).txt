@@ -1,0 +1,14 @@
+Môi trường ảo
+Tạo 1 môi trường ảo mới: python -m venv project_env
+Kích hoạt môi trường ảo: .\project_env\Scripts\Activate.ps1
+pip freeze: cung cấp cho chúng ta các gói ở dạng chính xác cho tệp requirements.txt
+deactivate: thoát khỏi chương trình dự án 
+Remove-Item project_env -Recurse -Force dùng để xóa hoàn toàn thư mục dự án project_env
+Tạo 1 thư mục mới: mkdir my_project
+Tạo môi trường ảo bên trong thư mục mới tạo: python -m venv my_project\venv
+pip install -r requirements2.txt: dùng để chạy trong môi trường ảo của thư mục
+khi requirements2 được tạo trước ở bên ngoài trong thư mục lớn còn tham số -r có nghĩa là “read from requirements file” (đọc từ file yêu cầu).
+Tạo 1 môi trương ảo có quyền truy cập vào tất cả các gói
+Khi trong thư mục lớn vẫn còn thư mục con ví dụ như: PS C:\Users\Cu\OneDrive\Documents\demo python\my_project>
+nếu muốn xóa thư mục con my_project thì phải sử dụng cd ..
+ Remove-Item my_project -Recurse -Force
